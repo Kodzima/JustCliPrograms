@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+# coding=utf-8
+
+from pyfzf.pyfzf import FzfPrompt
+import requests
+from bs4 import BeautifulSoup as bs4
+import os
+
+fzf = FzfPrompt()
+session = requests.session()
+response = session.get('https://www.atbmarket.com/uk/promo/akciya-ekonomiya')
+html = bs4(response.content, 'lxml')
+while True:    
+    products = []
+    photos = []
+    for item in html.findAll('div', class_='one-action-item'):
+        name = item.find('div', class_='one-action-tit').text[53:-45].replace('\n', '')
+        price = item.find('div', class_='one-action-price-now').text[65:].replace(' ', '.').replace('\n', '')                                                                                                                                    
+        imageUrl = 'https://www.atbmarket.com' + item.find('img')['src']
+        result = f'{name} Ціна: {price} грн'
+        products.append(result)
+        photos.append(imageUrl)
+    choose = fzf.prompt(products)[0]
+    photo = photos[products.index(choose)]
+    response = session.get(photo)
+    with open('tempphoto.jpg', 'wb') as file:
+        file.write(response.content)
+    os.system(f'sxiv -f tempphoto.jpg')
+    os.remove('tempphoto.jpg')
