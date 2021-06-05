@@ -19,8 +19,14 @@ while True:
     response = requests.get('https://context.reverso.net/translation/' + firstLanguage + '-' + secondLanguage + '/' + word, headers=headers)
     html = bs4(response.content, 'lxml')
     allWords = html.find('div', {'id' : 'translations-content'}).findAll('div')
-    result = []
-    for word in allWords:
-        result.append(word.text[10:].replace('\n', ''))
-    result.append('Нажмите Enter, чтобы продолжить: ')
-    fzf.prompt(result)
+    if allWords is not None:
+        for i in allWords: 
+            if i.text == '': 
+                allWords = html.find('div', {'id' : 'translations-content'}).findAll('a')
+        result = []
+        for word in allWords:
+            result.append(word.text.replace(' ', '').replace('\n', ''))
+        result.append('Нажмите Enter, чтобы продолжить: ')
+        fzf.prompt(result)
+    else:
+        print('Слово не найдено')
